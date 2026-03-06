@@ -34,6 +34,7 @@ def weather():
             f"https://api.open-meteo.com/v1/forecast?"
             f"latitude={latitude}&longitude={longitude}"
             "&current_weather=true"
+            "&hourly=relative_humidity_2m,pressure_msl,visibility,cloudcover"
         )
 
         weather_response = requests.get(weather_url, timeout=10)
@@ -48,13 +49,20 @@ def weather():
             return jsonify({"error": "Weather data unavailable"}), 502
 
         return jsonify({
-            "temperature": current["temperature"],
+            "temperature_c": current["temperature"],
+            "temperature_f": (current["temperature"] * 9/5) + 32,
             "wind_speed": current["windspeed"],
+            "wind_direction": current["winddirection"],
+            "humidity": weather_data["hourly"]["relative_humidity_2m"][0],
+            "pressure": weather_data["hourly"]["pressure_msl"][0],
+            "visibility": weather_data["hourly"]["visibility"][0],
+            "cloud_cover": weather_data["hourly"]["cloudcover"][0]
         })
-    except requests.RequestException as e:
+
+    except requests.RequestException:
         return jsonify({"error": "Weather service unavailable"}), 502
     except (KeyError, IndexError, TypeError):
         return jsonify({"error": "City not found"}), 404
 
 if __name__ == "__main__":
-    app.run(debug=True, host="127.0.0.1", port=5000)
+            app.run(debug=True, host="127.0.0.1", port=5001)
